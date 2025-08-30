@@ -1,4 +1,5 @@
-/ks-projects-201801.csv
-/models
-/mlruns
+ks-projects-201801.csv
+models/
+mlruns/
 remote_dir/
+.ipynb_checkpoints/
