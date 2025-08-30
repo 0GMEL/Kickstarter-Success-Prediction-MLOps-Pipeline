@@ -6,6 +6,13 @@
 
 ## ⚙️ Установка и запуск
 
+### 0. Скачать датасет 
+
+``` bash
+https://www.kaggle.com/datasets/kemical/kickstarter-projects/data
+```
+<i><b>оттуда нужно достать ks-projects-201801.csv</b></i>
+
 ### 1. Клонирование репозитория
 
 ```bash
