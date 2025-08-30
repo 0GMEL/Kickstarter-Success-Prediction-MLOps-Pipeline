@@ -1,0 +1,72 @@
+schema: '2.0'
+stages:
+  data_load:
+    cmd: python data_loader.py
+    deps:
+    - path: data_loader.py
+      hash: md5
+      md5: c1fcccba2ea5458f7c5c62e176f44fba
+      size: 6145
+    - path: params.yaml
+      hash: md5
+      md5: 3a4dc67a3f73fe0ae52fe2b98a2fc4ab
+      size: 796
+    outs:
+    - path: data/processed/X_test.csv
+      hash: md5
+      md5: 49ffa3dbba895fd00dba7522413af420
+      size: 865232467
+    - path: data/processed/X_train.csv
+      hash: md5
+      md5: e2108730432a32ee30a2966d2a6b1036
+      size: 3460932392
+    - path: data/processed/y_test.csv
+      hash: md5
+      md5: 4294b0fa9f22fd9af338dcea6aa3b1d9
+      size: 132678
+    - path: data/processed/y_train.csv
+      hash: md5
+      md5: 50fbf4b33bd573f25ba5a03764f4ba1f
+      size: 530688
+    - path: ddm/preprocessor.joblib
+      hash: md5
+      md5: 194eea9c6e866dd453daa82aef439f5a
+      size: 115098
+  train:
+    cmd: python train_model.py
+    deps:
+    - path: data/processed/X_test.csv
+      hash: md5
+      md5: 49ffa3dbba895fd00dba7522413af420
+      size: 865232467
+    - path: data/processed/X_train.csv
+      hash: md5
+      md5: e2108730432a32ee30a2966d2a6b1036
+      size: 3460932392
+    - path: data/processed/y_test.csv
+      hash: md5
+      md5: 4294b0fa9f22fd9af338dcea6aa3b1d9
+      size: 132678
+    - path: data/processed/y_train.csv
+      hash: md5
+      md5: 50fbf4b33bd573f25ba5a03764f4ba1f
+      size: 530688
+    - path: params.yaml
+      hash: md5
+      md5: 3a4dc67a3f73fe0ae52fe2b98a2fc4ab
+      size: 796
+    - path: train_model.py
+      hash: md5
+      md5: 8e422b5f57b41468e25ee9b906cd2cc6
+      size: 3333
+    outs:
+    - path: mlruns/
+      hash: md5
+      md5: 104e9368f4433d4bb9ca3a64dc5be97b.dir
+      size: 12756530
+      nfiles: 170
+    - path: models/
+      hash: md5
+      md5: a3fd8e4b310e2e8da6f3e0eed1bf2923.dir
+      size: 12748530
+      nfiles: 20
