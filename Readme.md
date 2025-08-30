@@ -9,8 +9,8 @@
 ### 1. Клонирование репозитория
 
 ```bash
-git clone <>
-cd KickstarterProject
+git clone https://github.com/0GMEL/Kickstarter-Success-Prediction-MLOps-Pipeline.git
+cd Kickstarter-Success-Prediction-MLOps-Pipeline
 ```
 
 ### 2. Установка зависимостей
@@ -80,5 +80,3 @@ mlflow server --host 127.0.0.1 --port 5000
 1. **Автоматизированный пайплайн**: DVC управляет зависимостями между этапами обработки данных и обучения моделей
 2. **Версионирование данных**: Все данные и модели находятся под контролем версий
 3. **Трекинг экспериментов**: MLflow отслеживает все параметры, метрики и артефакты экспериментов
-
-#### DVC данные скрыты п

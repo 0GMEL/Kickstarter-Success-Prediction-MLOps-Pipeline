@@ -6,6 +6,7 @@ import mlflow.sklearn
 import time
 import logging
 import pandas as pd
+import os
 
 def train_and_evalute():
     with open('params.yaml', 'r') as f:
@@ -70,6 +71,8 @@ def train_and_evalute():
 
             model_filename = f"{exp_name.replace(' ', '_').lower()}.pkl"
             model_path = f"models/{model_filename}"
+            os.makedirs(os.path.dirname(model_path), exist_ok = True)
+
             mlflow.sklearn.save_model(model, model_path)
 
             logging.info(f"Эксперимент {exp_name} завершен. ROC-AUC: {roc_auc:.4f}, Accuracy: {accuracy:.4f}")
