@@ -106,7 +106,7 @@ status_c = df['state'].value_counts(normalize = True)
 - suspended = 0.004875
 ![img.png](img/img.png)
 3. ### Корреляция
-![img.png](img.png)
+![img.png](img/img10.png)
 4. ### Процент успешных проектов по категориям
 ![img_1.png](img/img_1.png)
 5. ### Распределение логарифма цели сбора для успешных и неуспешных проектов
@@ -114,10 +114,10 @@ status_c = df['state'].value_counts(normalize = True)
 6. ### Распределение длительности кампании для успешных и неуспешных проектов
 ![img_3.png](img/img_3.png)
 7. ### Процент успеха относительно времени
-![img_1.png](img_1.png)
+![img_1.png](img/img_20.png)
 8. ### Сравнение производительностей моделей
-![img_2.png](img_2.png)
+![img_2.png](img/img_30.png)
 9. ### ROC-кривая
-![img_3.png](img_3.png)
+![img_3.png](img/img_40.png)
 10. ### Важность признаков
-![img_4.png](img_4.png)
+![img_4.png](img/img_50.png)
