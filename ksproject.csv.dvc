@@ -1,0 +1,5 @@
+outs:
+- md5: 362d9dd4576be5ed0fd3568d7a0a547d
+  size: 58030359
+  hash: md5
+  path: ksproject.csv
