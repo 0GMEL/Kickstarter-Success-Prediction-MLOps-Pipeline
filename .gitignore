@@ -1,0 +1,33 @@
+/ksproject.csv
+/models
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.env
+*.venv
+myenv/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# DVC
+*.dvc
+.dvc/
+dvc.lock
+mlruns/
+
+# Data
+data/*.csv
+data/*.zip
+data/raw/
+data/interim/
+data/processed/
+
+# Logs
+*.log
+airflow.log
