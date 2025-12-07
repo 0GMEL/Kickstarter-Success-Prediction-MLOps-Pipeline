@@ -28,14 +28,6 @@ def ml_pipeline():
     def check_environment():
         return f'cd {WORKING_DIR} && export PATH=$PATH:~/.local/bin && echo "success"'
 
-    # @task.bash
-    # def init_dvc():
-        # return f'cd {WORKING_DIR} && export PATH=$PATH:~/.local/bin && dvc init && dvc status'
-
-    # @task.bash
-    # def pull_data():
-        # return f'cd {WORKING_DIR} && export PATH=$PATH:~/.local/bin && dvc pull'
-
     @task.bash
     def run_dataloader():
         return f'cd {WORKING_DIR} && python3 data_loader.py && ls -la *.csv'
@@ -49,8 +41,6 @@ def ml_pipeline():
         return f'cd {WORKING_DIR} && export PATH=$PATH:~/.local/bin && dvc repro --force'
 
     check_task = check_environment()
-    # init_task = init_dvc()
-    # pulldata_task = pull_data()
     dataloader_task = run_dataloader()
     training_task = run_training()
     repro_task = run_dvc_repro()

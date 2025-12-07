@@ -12,4 +12,4 @@ spec:
       port: 80
       targetPort: 5050
       name: http
-type: CLusterIP
+  type: ClusterIP
