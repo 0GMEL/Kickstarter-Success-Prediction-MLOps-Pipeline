@@ -94,6 +94,7 @@ mlflow server --host 127.0.0.1 --port 5000
 df.shape
 ``` 
 (378661, 15)
+
 2. ### Распределение
 ```bash 
 status_c = df['state'].value_counts(normalize = True)
