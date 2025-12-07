@@ -1,0 +1,12 @@
+.venv
+data
+img
+mlruns
+models/randomforest_tuned.pkl
+models/randomforest_baseline.pkl
+models/gradientboosting_baseline.pkl
+notebooks
+remote_dir
+.dvcignore
+.gitignore
+dvc.lock

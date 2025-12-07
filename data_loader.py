@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-import re
 from textblob import TextBlob
 import nltk
 from nltk.corpus import stopwords
@@ -22,22 +21,77 @@ from sklearn.model_selection import train_test_split
 warnings.filterwarnings('ignore')
 ssl._create_default_https_context = lambda *args, **kwargs: ssl.create_default_context(cafile=certifi.where())
 
-nltk.download('stopwords')
-nltk.download('wordnet')
-nltk.download('punkt')
+nltk.download('stopwords', quiet=True)
+nltk.download('wordnet', quiet=True)
+nltk.download('punkt', quiet=True)
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+
+def preprocess_text(text):
+    if pd.isna(text):
+        return ""
+
+    text = text.lower()
+    text = ''.join([c if c.isalpha() or c.isspace() else ' ' for c in text])
+    return text
+
+
+def preprocess_text_batch(texts):
+    stop_words = set(stopwords.words('english'))
+    lemmatizer = WordNetLemmatizer()
+
+    def process_single(text):
+        if pd.isna(text):
+            return ""
+
+        text = text.lower()
+        text = ''.join([c if c.isalpha() or c.isspace() else ' ' for c in text])
+
+        words = text.split()
+        words = [word for word in words if word not in stop_words]
+        words = [lemmatizer.lemmatize(word) for word in words]
+
+        return ' '.join(words)
+
+    return [process_single(text) for text in texts]
 
 
 def load_and_preprocess_data():
     logging.info("Загрузка и предобработка данных...")
 
+    processed_dir = 'data/processed'
+    preprocessor_path = "ddm/preprocessor.joblib"
+
+    if (os.path.exists(os.path.join(processed_dir, 'X_train.csv')) and
+            os.path.exists(os.path.join(processed_dir, 'X_test.csv')) and
+            os.path.exists(os.path.join(processed_dir, 'y_train.csv')) and
+            os.path.exists(os.path.join(processed_dir, 'y_test.csv')) and
+            os.path.exists(preprocessor_path)):
+        logging.info("Обработанные данные уже существуют. Загружаем их...")
+
+        X_train_df = pd.read_csv(os.path.join(processed_dir, 'X_train.csv'))
+        X_test_df = pd.read_csv(os.path.join(processed_dir, 'X_test.csv'))
+        y_train = pd.read_csv(os.path.join(processed_dir, 'y_train.csv')).squeeze()
+        y_test = pd.read_csv(os.path.join(processed_dir, 'y_test.csv')).squeeze()
+        preprocessor = joblib.load(preprocessor_path)
+
+        logging.info("Данные успешно загружены из кэша")
+        return X_train_df, X_test_df, y_train, y_test, preprocessor
+
     with open('params.yaml', 'r') as f:
         params = yaml.safe_load(f)
 
-    df = pd.read_csv('ks-projects-201801.csv', parse_dates=['deadline', 'launched'])
+    cols_to_keep = ['ID', 'name', 'category', 'main_category', 'currency',
+                    'deadline', 'goal', 'launched', 'pledged', 'state',
+                    'backers', 'country', 'usd pledged', 'usd_pledged_real', 'usd_goal_real']
 
-    df = df[df['state'].isin(['failed', 'successful'])]
+    df = pd.read_csv('ks-projects-201801.csv',
+                     parse_dates=['deadline', 'launched'],
+                     usecols=cols_to_keep)
+
+    mask = df['state'].isin(['failed', 'successful'])
+    df = df[mask].copy()
     df['success'] = (df['state'] == 'successful').astype(int)
 
     cols_to_drop = ['ID', 'pledged', 'usd pledged', 'state', 'backers']
@@ -55,41 +109,25 @@ def load_and_preprocess_data():
 
     df = df.drop(columns=['launched', 'deadline'])
 
-    def preprocess_text(text):
-        if pd.isna(text):
-            return ""
+    logging.info("Начинаю обработку текстовых данных...")
+    df['name_prep'] = preprocess_text_batch(df['name'].tolist())
 
-        text = text.lower()
-        text = re.sub(r'[^a-zA-Z\s]', '', text)
+    logging.info("Вычисляю дополнительные текстовые признаки...")
+    df['name_len'] = df['name_prep'].str.split().str.len()
 
-        words = text.split()
-        stop_words = set(stopwords.words('english'))
-        words = [word for word in words if word not in stop_words]
-
-        lemmatizer = WordNetLemmatizer()
-        words = [lemmatizer.lemmatize(word) for word in words]
-
-        return ' '.join(words)
-
-    df['name_prep'] = df['name'].apply(preprocess_text)
-    df['name_len'] = df['name_prep'].apply(lambda x: len(x.split()))
+    logging.info("Вычисляю сентимент...")
     df['name_sent'] = df['name_prep'].apply(
         lambda x: TextBlob(x).sentiment.polarity if x.strip() != '' else 0
     )
 
+    logging.info("Создаю признаки на основе истории...")
     df['creator_id'] = df['main_category'] + '_' + df['country']
     df = df.sort_values('launch_year')
-    creator_history = df.groupby('creator_id').agg(
-        {
-            'success': ['count', 'mean'],
-            'usd_goal_real': 'mean'
-        }
-    ).reset_index()
 
-    creator_history.columns = ['creator_id', 'creator_projects_count',
-                               'creator_success_rate', 'creator_avg_goal']
-
-    df = pd.merge(df, creator_history, on='creator_id', how='left')
+    group = df.groupby('creator_id')
+    df['creator_projects_count'] = group['success'].transform('count')
+    df['creator_success_rate'] = group['success'].transform('mean')
+    df['creator_avg_goal'] = group['usd_goal_real'].transform('mean')
 
     df = df.drop(columns=['name', 'creator_id', 'usd_pledged_real', 'goal'])
 
@@ -105,11 +143,11 @@ def load_and_preprocess_data():
     ])
 
     categorical_transformer = Pipeline(steps=[
-        ('onehot', OneHotEncoder(handle_unknown='ignore', sparse_output=False))
+        ('onehot', OneHotEncoder(handle_unknown='ignore', sparse_output=False, max_categories=50))
     ])
 
     text_transformer = Pipeline(steps=[
-        ('tfidf', TfidfVectorizer(max_features=3000, stop_words='english'))
+        ('tfidf', TfidfVectorizer(max_features=1000, stop_words='english', ngram_range=(1, 2)))
     ])
 
     preprocessor = ColumnTransformer(
@@ -118,7 +156,8 @@ def load_and_preprocess_data():
             ('cat', categorical_transformer, categorical_features),
             ('text', text_transformer, text_feature)
         ],
-        sparse_threshold=0.3
+        sparse_threshold=0.3,
+        n_jobs=-1
     )
 
     test_size = params['data_processing']['test_size']
@@ -128,13 +167,9 @@ def load_and_preprocess_data():
         X, y, test_size=test_size, random_state=random_state, stratify=y
     )
 
+    logging.info("Начинаю трансформацию данных...")
     X_train_transformed = preprocessor.fit_transform(X_train)
     X_test_transformed = preprocessor.transform(X_test)
-
-    if hasattr(X_train_transformed, 'toarray'):
-        X_train_transformed = X_train_transformed.toarray()
-    if hasattr(X_test_transformed, 'toarray'):
-        X_test_transformed = X_test_transformed.toarray()
 
     feature_names = []
     for name, transformer, features in preprocessor.transformers_:
@@ -147,28 +182,31 @@ def load_and_preprocess_data():
             text_features_out = preprocessor.named_transformers_['text'].named_steps['tfidf'].get_feature_names_out()
             feature_names.extend(text_features_out)
 
-    X_train_df = pd.DataFrame(X_train_transformed, columns=feature_names)
-    X_test_df = pd.DataFrame(X_test_transformed, columns=feature_names)
+    from scipy import sparse
 
-    for col in X_train_df.columns:
-        if X_train_df[col].dtype == 'object':
-            X_train_df[col] = pd.to_numeric(X_train_df[col], errors='coerce')
-            X_test_df[col] = pd.to_numeric(X_test_df[col], errors='coerce')
+    os.makedirs(processed_dir, exist_ok=True)
 
-    X_train_df = X_train_df.fillna(0)
-    X_test_df = X_test_df.fillna(0)
+    sparse.save_npz(os.path.join(processed_dir, 'X_train_sparse.npz'), sparse.csr_matrix(X_train_transformed))
+    sparse.save_npz(os.path.join(processed_dir, 'X_test_sparse.npz'), sparse.csr_matrix(X_test_transformed))
 
-    os.makedirs('data/processed', exist_ok=True)
-    X_train_df.to_csv('data/processed/X_train.csv', index=False)
-    X_test_df.to_csv('data/processed/X_test.csv', index=False)
-    y_train.to_csv('data/processed/y_train.csv', index=False)
-    y_test.to_csv('data/processed/y_test.csv', index=False)
+    X_train_df = pd.DataFrame(
+        X_train_transformed.toarray() if sparse.issparse(X_train_transformed) else X_train_transformed,
+        columns=feature_names)
+    X_test_df = pd.DataFrame(
+        X_test_transformed.toarray() if sparse.issparse(X_test_transformed) else X_test_transformed,
+        columns=feature_names)
+
+    X_train_df.to_csv(os.path.join(processed_dir, 'X_train.csv'), index=False)
+    X_test_df.to_csv(os.path.join(processed_dir, 'X_test.csv'), index=False)
+    y_train.to_csv(os.path.join(processed_dir, 'y_train.csv'), index=False)
+    y_test.to_csv(os.path.join(processed_dir, 'y_test.csv'), index=False)
 
     os.makedirs('ddm', exist_ok=True)
-    joblib.dump(preprocessor, "ddm/preprocessor.joblib")
+    joblib.dump(preprocessor, preprocessor_path)
 
     logging.info("Данные успешно обработаны и сохранены")
 
+    return X_train_df, X_test_df, y_train, y_test, preprocessor
 
 if __name__ == "__main__":
     load_and_preprocess_data()

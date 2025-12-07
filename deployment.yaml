@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kst-model-app
+  labels:
+    app: kst-model-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: kst-model-app
+  template:
+    metadata:
+      labels:
+        app: kst-model-app
+    spec:
+      serviceAccountName: kst-model
+      containers:
+        - name: kst-model-app
+          image: ogmel/kst-model:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5050
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "1Gi"
+              cpu: "200m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5050
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5050
+            initialDelaySeconds: 5
+            periodSeconds: 5

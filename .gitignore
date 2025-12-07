@@ -1,6 +1,7 @@
+.venv
+data
+ddm
+mlruns
+models
+remote_dir
 ks-projects-201801.csv
-models/
-mlruns/
-remote_dir/
-.ipynb_checkpoints/
-img/

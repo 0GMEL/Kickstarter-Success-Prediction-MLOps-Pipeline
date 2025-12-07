@@ -6,27 +6,27 @@
 
 ## ⚙️ Установка и запуск
 
-### 0. Скачать датасет 
+### 1. Скачать датасет 
 
 ``` bash
 https://www.kaggle.com/datasets/kemical/kickstarter-projects/data
 ```
-<i><b>оттуда нужно достать ks-projects-201801.csv</b></i>
+<i><b>Скачать ks-projects-201801.csv</b></i>
 
-### 1. Клонирование репозитория
+### 2. Клонирование репозитория
 
 ```bash
 git clone https://github.com/0GMEL/Kickstarter-Success-Prediction-MLOps-Pipeline.git
 cd Kickstarter-Success-Prediction-MLOps-Pipeline
 ```
 
-### 2. Установка зависимостей
+### 3. Установка зависимостей
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Запуск полного пайплайна
+### 4. Запуск полного пайплайна
 
 ```bash
 # Инициализация DVC (если еще не выполнено)
