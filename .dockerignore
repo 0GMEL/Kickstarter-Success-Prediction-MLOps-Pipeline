@@ -1,3 +1,4 @@
+.dvc
 .venv
 data
 img
@@ -10,3 +11,5 @@ remote_dir
 .dvcignore
 .gitignore
 dvc.lock
+ks-projects-201801.csv
+Readme.md
